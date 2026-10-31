@@ -451,4 +451,5 @@ public User updatePatientProfile(
     // Mobile, UHID, role, and status remain unchanged
     return userRepository.save(patient);
 }
+
 }

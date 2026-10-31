@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -32,34 +31,30 @@ public class PasswordResetService {
     private final Map<String, ResetRecord> resetRecords =
             new ConcurrentHashMap<>();
 
-    @Value("${app.password-reset.demo-mode:false}")
-    private boolean demoMode;
-
     public PasswordResetService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             ResendEmailService resendEmailService) {
+
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.resendEmailService = resendEmailService;
     }
 
-    public Map<String, Object> requestOtp(String rawMobile) {
-        String mobile = normalizeMobile(rawMobile);
+    public Map<String, Object> requestOtp(String rawEmail) {
+
+        String email = normalizeEmail(rawEmail);
 
         Map<String, Object> response = new HashMap<>();
+
         response.put(
                 "message",
-                "If an account exists for this mobile number, an OTP has been sent to its registered email."
+                "If an account exists for this email address, an OTP has been sent."
         );
 
-        User user = userRepository.findByMobile(mobile).orElse(null);
+        User user = userRepository.findByEmail(email).orElse(null);
 
         if (user == null) {
-            return response;
-        }
-
-        if (user.getEmail() == null || user.getEmail().isBlank()) {
             return response;
         }
 
@@ -68,28 +63,29 @@ public class PasswordResetService {
                 RANDOM.nextInt(1_000_000)
         );
 
-        // Send the OTP before saving it as an active OTP.
+        // Send OTP to the registered email.
         resendEmailService.sendOtpEmail(user.getEmail(), otp);
 
         otpRecords.put(
-                mobile,
+                email,
                 new OtpRecord(
                         otp,
                         Instant.now().plusSeconds(OTP_EXPIRY_SECONDS)
                 )
         );
 
-        // Never return the OTP to the frontend.
+        // Never return OTP to frontend.
         response.put("demoMode", false);
 
         return response;
     }
 
-    public String verifyOtp(String rawMobile, String rawOtp) {
-        String mobile = normalizeMobile(rawMobile);
+    public String verifyOtp(String rawEmail, String rawOtp) {
+
+        String email = normalizeEmail(rawEmail);
         String otp = rawOtp == null ? "" : rawOtp.trim();
 
-        OtpRecord record = otpRecords.get(mobile);
+        OtpRecord record = otpRecords.get(email);
 
         if (record == null) {
             throw new IllegalArgumentException(
@@ -98,14 +94,16 @@ public class PasswordResetService {
         }
 
         if (Instant.now().isAfter(record.expiresAt)) {
-            otpRecords.remove(mobile);
+            otpRecords.remove(email);
+
             throw new IllegalArgumentException(
                     "OTP expired. Request a new OTP."
             );
         }
 
         if (record.attempts >= MAX_ATTEMPTS) {
-            otpRecords.remove(mobile);
+            otpRecords.remove(email);
+
             throw new IllegalArgumentException(
                     "Too many incorrect attempts. Request a new OTP."
             );
@@ -115,7 +113,7 @@ public class PasswordResetService {
             record.attempts++;
 
             if (record.attempts >= MAX_ATTEMPTS) {
-                otpRecords.remove(mobile);
+                otpRecords.remove(email);
             }
 
             throw new IllegalArgumentException(
@@ -123,12 +121,12 @@ public class PasswordResetService {
             );
         }
 
-        otpRecords.remove(mobile);
+        otpRecords.remove(email);
 
         String resetToken = UUID.randomUUID().toString();
 
         resetRecords.put(
-                mobile,
+                email,
                 new ResetRecord(
                         resetToken,
                         Instant.now().plusSeconds(OTP_EXPIRY_SECONDS)
@@ -139,11 +137,11 @@ public class PasswordResetService {
     }
 
     public void resetPassword(
-            String rawMobile,
+            String rawEmail,
             String rawResetToken,
             String rawNewPassword) {
 
-        String mobile = normalizeMobile(rawMobile);
+        String email = normalizeEmail(rawEmail);
 
         String resetToken =
                 rawResetToken == null ? "" : rawResetToken.trim();
@@ -157,44 +155,51 @@ public class PasswordResetService {
             );
         }
 
-        ResetRecord record = resetRecords.get(mobile);
+        ResetRecord record = resetRecords.get(email);
 
         if (record == null
                 || Instant.now().isAfter(record.expiresAt)
                 || !record.token.equals(resetToken)) {
 
-            resetRecords.remove(mobile);
+            resetRecords.remove(email);
 
             throw new IllegalArgumentException(
                     "Password reset session is invalid or expired. Verify OTP again."
             );
         }
 
-        User user = userRepository.findByMobile(mobile)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Unable to reset password for this account."
                 ));
 
         user.setPassword(passwordEncoder.encode(newPassword));
+
         userRepository.save(user);
 
-        resetRecords.remove(mobile);
-        otpRecords.remove(mobile);
+        resetRecords.remove(email);
+        otpRecords.remove(email);
     }
 
-    private String normalizeMobile(String rawMobile) {
-        String mobile = rawMobile == null ? "" : rawMobile.trim();
+    private String normalizeEmail(String rawEmail) {
 
-        if (!mobile.matches("[0-9]{10}")) {
+        String email = rawEmail == null
+                ? ""
+                : rawEmail.trim().toLowerCase();
+
+        if (email.isBlank()
+                || !email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+
             throw new IllegalArgumentException(
-                    "Enter a valid 10-digit mobile number."
+                    "Enter a valid email address."
             );
         }
 
-        return mobile;
+        return email;
     }
 
     private static class OtpRecord {
+
         private final String otp;
         private final Instant expiresAt;
         private int attempts;
@@ -206,6 +211,7 @@ public class PasswordResetService {
     }
 
     private static class ResetRecord {
+
         private final String token;
         private final Instant expiresAt;
 

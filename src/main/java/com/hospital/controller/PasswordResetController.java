@@ -26,9 +26,10 @@ public class PasswordResetController {
             @RequestBody Map<String, String> request) {
         try {
             Map<String, Object> response =
-                    passwordResetService.requestOtp(request.get("mobile"));
+                    passwordResetService.requestOtp(request.get("email"));
 
             return ResponseEntity.ok(response);
+
         } catch (IllegalArgumentException e) {
             return errorResponse(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
@@ -39,7 +40,7 @@ public class PasswordResetController {
             @RequestBody Map<String, String> request) {
         try {
             String resetToken = passwordResetService.verifyOtp(
-                    request.get("mobile"),
+                    request.get("email"),
                     request.get("otp")
             );
 
@@ -48,6 +49,7 @@ public class PasswordResetController {
             response.put("resetToken", resetToken);
 
             return ResponseEntity.ok(response);
+
         } catch (IllegalArgumentException e) {
             return errorResponse(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
@@ -58,7 +60,7 @@ public class PasswordResetController {
             @RequestBody Map<String, String> request) {
         try {
             passwordResetService.resetPassword(
-                    request.get("mobile"),
+                    request.get("email"),
                     request.get("resetToken"),
                     request.get("newPassword")
             );
@@ -70,6 +72,7 @@ public class PasswordResetController {
             );
 
             return ResponseEntity.ok(response);
+
         } catch (IllegalArgumentException e) {
             return errorResponse(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
@@ -78,8 +81,10 @@ public class PasswordResetController {
     private ResponseEntity<Map<String, String>> errorResponse(
             String message,
             HttpStatus status) {
+
         Map<String, String> response = new HashMap<>();
         response.put("message", message);
+
         return ResponseEntity.status(status).body(response);
     }
 }
