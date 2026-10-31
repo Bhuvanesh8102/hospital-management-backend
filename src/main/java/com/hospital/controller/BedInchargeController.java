@@ -1,6 +1,7 @@
 package com.hospital.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.hospital.entity.Admission;
 import com.hospital.entity.Bed;
+import com.hospital.entity.Room;
 import com.hospital.service.BedInchargeService;
 
 @RestController
@@ -20,21 +22,18 @@ public class BedInchargeController {
         this.bedInchargeService = bedInchargeService;
     }
 
-    // View all beds
+    // ================= BED MANAGEMENT =================
+
     @GetMapping("/beds")
     public ResponseEntity<List<Bed>> getAllBeds() {
-        return ResponseEntity.ok(
-                bedInchargeService.getAllBeds());
+        return ResponseEntity.ok(bedInchargeService.getAllBeds());
     }
 
-    // View available beds
     @GetMapping("/beds/available")
     public ResponseEntity<List<Bed>> getAvailableBeds() {
-        return ResponseEntity.ok(
-                bedInchargeService.getAvailableBeds());
+        return ResponseEntity.ok(bedInchargeService.getAvailableBeds());
     }
 
-    // View beds by ward
     @GetMapping("/beds/ward/{wardName}")
     public ResponseEntity<List<Bed>> getBedsByWard(
             @PathVariable String wardName) {
@@ -43,115 +42,121 @@ public class BedInchargeController {
                 bedInchargeService.getBedsByWard(wardName));
     }
 
-    // Add new bed
     @PostMapping("/bed")
-    public ResponseEntity<?> addBed(
-            @RequestBody Bed bed) {
-
-        try {
-            Bed savedBed = bedInchargeService.addBed(bed);
-
-            return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(savedBed);
-
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(e.getMessage());
-        }
+    public ResponseEntity<Bed> addBed(@RequestBody Bed bed) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(bedInchargeService.addBed(bed));
     }
 
-    // Update bed
     @PutMapping("/bed/{bedId}")
-    public ResponseEntity<?> updateBed(
+    public ResponseEntity<Bed> updateBed(
             @PathVariable Long bedId,
             @RequestBody Bed bed) {
 
-        try {
-            return ResponseEntity.ok(
-                    bedInchargeService.updateBed(
-                            bedId, bed));
-
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(e.getMessage());
-        }
+        return ResponseEntity.ok(
+                bedInchargeService.updateBed(bedId, bed));
     }
 
-    // Assign bed to admission
     @PutMapping("/admission/{admissionId}/assign/{bedId}")
-    public ResponseEntity<?> assignBed(
+    public ResponseEntity<Bed> assignBed(
             @PathVariable Long admissionId,
             @PathVariable Long bedId) {
 
-        try {
-            return ResponseEntity.ok(
-                    bedInchargeService.assignBed(
-                            admissionId, bedId));
-
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(e.getMessage());
-        }
+        return ResponseEntity.ok(
+                bedInchargeService.assignBed(admissionId, bedId));
     }
 
-    // Release bed after discharge
     @PutMapping("/bed/{bedId}/release")
-    public ResponseEntity<?> releaseBed(
-            @PathVariable Long bedId) {
-
-        try {
-            return ResponseEntity.ok(
-                    bedInchargeService.releaseBed(bedId));
-
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(e.getMessage());
-        }
+    public ResponseEntity<Bed> releaseBed(@PathVariable Long bedId) {
+        return ResponseEntity.ok(
+                bedInchargeService.releaseBed(bedId));
     }
 
-    // Transfer patient to another bed
     @PutMapping("/admission/{admissionId}/transfer/{newBedId}")
-    public ResponseEntity<?> transferBed(
+    public ResponseEntity<Admission> transferBed(
             @PathVariable Long admissionId,
             @PathVariable Long newBedId) {
 
-        try {
-            return ResponseEntity.ok(
-                    bedInchargeService.transferBed(
-                            admissionId, newBedId));
-
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(e.getMessage());
-        }
+        return ResponseEntity.ok(
+                bedInchargeService.transferBed(admissionId, newBedId));
     }
 
-    // View admission details
+    // ================= ROOM MANAGEMENT =================
+
+    @GetMapping("/rooms")
+    public ResponseEntity<List<Map<String, Object>>> getAllRooms() {
+        return ResponseEntity.ok(
+                bedInchargeService.getAllRooms());
+    }
+
+    @GetMapping("/rooms/ward/{wardName}")
+    public ResponseEntity<List<Map<String, Object>>> getRoomsByWard(
+            @PathVariable String wardName) {
+
+        return ResponseEntity.ok(
+                bedInchargeService.getRoomsByWard(wardName));
+    }
+
+    @PostMapping("/room")
+    public ResponseEntity<Room> addRoom(@RequestBody Room room) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(bedInchargeService.addRoom(room));
+    }
+
+    @PutMapping("/room/{roomId}")
+    public ResponseEntity<Room> updateRoom(
+            @PathVariable Long roomId,
+            @RequestBody Room room) {
+
+        return ResponseEntity.ok(
+                bedInchargeService.updateRoom(roomId, room));
+    }
+
+    // ================= WARD MANAGEMENT =================
+
+    @GetMapping("/wards")
+    public ResponseEntity<List<String>> getAllWardNames() {
+        return ResponseEntity.ok(
+                bedInchargeService.getAllWardNames());
+    }
+
+    @PostMapping("/ward")
+    public ResponseEntity<String> addWard(
+            @RequestBody Map<String, String> request) {
+
+        bedInchargeService.addWard(request.get("wardName"));
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body("Ward added successfully");
+    }
+
+    // ================= ADMISSION MANAGEMENT =================
+
     @GetMapping("/admission/{admissionId}")
-    public ResponseEntity<?> getAdmission(
+    public ResponseEntity<Admission> getAdmission(
             @PathVariable Long admissionId) {
 
-        try {
-            return ResponseEntity.ok(
-                    bedInchargeService.getAdmission(admissionId));
-
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(e.getMessage());
-        }
+        return ResponseEntity.ok(
+                bedInchargeService.getAdmission(admissionId));
     }
-    
+
     @GetMapping("/admissions")
     public ResponseEntity<List<Admission>> getAllAdmissions() {
         return ResponseEntity.ok(
-                bedInchargeService.getAllAdmissions()
-        );
+                bedInchargeService.getAllAdmissions());
+    }
+
+    // ================= BED AVAILABILITY DASHBOARD =================
+
+    @GetMapping("/beds/summary")
+    public ResponseEntity<Map<String, Object>> getBedAvailabilitySummary() {
+        return ResponseEntity.ok(
+                bedInchargeService.getBedAvailabilitySummary());
+    }
+
+    @GetMapping("/beds/ward-summary")
+    public ResponseEntity<List<Map<String, Object>>> getWardWiseBedSummary() {
+        return ResponseEntity.ok(
+                bedInchargeService.getWardWiseBedSummary());
     }
 }

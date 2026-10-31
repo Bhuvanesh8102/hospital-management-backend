@@ -1,7 +1,6 @@
 package com.hospital.repository;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -15,9 +14,9 @@ public interface BedRepository extends JpaRepository<Bed, Long> {
 
     List<Bed> findByWardName(String wardName);
 
-    List<Bed> findByRoomNumber(String roomNumber);
+    List<Bed> findByWardNameAndRoomNumber(
+            String wardName, String roomNumber);
 
-    Optional<Bed> findByBedNumber(String bedNumber);
-
-    boolean existsByBedNumber(String bedNumber);
+    long countByWardNameAndRoomNumber(
+            String wardName, String roomNumber);
 }
