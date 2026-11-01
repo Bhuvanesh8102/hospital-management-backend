@@ -52,18 +52,11 @@ public class SecurityConfig {
 
             .authorizeHttpRequests(auth -> auth
 
-                // =====================================================
                 // AUTHENTICATION APIs
-                // =====================================================
-
                 .requestMatchers("/auth/**")
                 .permitAll()
 
-
-                // =====================================================
                 // SWAGGER
-                // =====================================================
-
                 .requestMatchers(
                         "/swagger-ui/**",
                         "/swagger-ui.html",
@@ -71,32 +64,15 @@ public class SecurityConfig {
                 )
                 .permitAll()
 
-
-                // =====================================================
                 // CORS PREFLIGHT
-                // =====================================================
-
                 .requestMatchers(HttpMethod.OPTIONS, "/**")
                 .permitAll()
 
-
-                // =====================================================
                 // ADMIN
-                // =====================================================
-
                 .requestMatchers("/admin/**")
                 .hasRole("ADMIN")
 
-
-                // =====================================================
                 // DOCTOR SPECIALIZATION APIs
-                // =====================================================
-                // Patient, Doctor, Admin and Receptionist can
-                // view specializations and doctors.
-                //
-                // Receptionist needs these APIs for Walk-In booking.
-                // =====================================================
-
                 .requestMatchers(
                         HttpMethod.GET,
                         "/doctor/specializations"
@@ -119,88 +95,40 @@ public class SecurityConfig {
                         "RECEPTIONIST"
                 )
 
-
-                // =====================================================
                 // DOCTOR
-                // =====================================================
-
                 .requestMatchers("/doctor/**")
                 .hasRole("DOCTOR")
 
-
-                // =====================================================
                 // NURSE
-                // =====================================================
-
                 .requestMatchers("/nurse/**")
                 .hasRole("NURSE")
 
-
-                // =====================================================
                 // PATIENT
-                // =====================================================
-
                 .requestMatchers("/patient/**")
                 .hasRole("PATIENT")
 
-
-                /*
-                 * =====================================================
-                 * STAFF MODULES
-                 * =====================================================
-                 *
-                 * Temporarily using authenticated()
-                 * instead of hasRole() so that the
-                 * common 403 authorization problem
-                 * does not block these modules.
-                 */
-
-
-                // =====================================================
                 // RECEPTIONIST
-                // =====================================================
-
                 .requestMatchers("/receptionist/**")
                 .authenticated()
 
-
-                // =====================================================
                 // PHARMACIST
-                // =====================================================
-
                 .requestMatchers("/pharmacist/**")
                 .authenticated()
 
-
-                // =====================================================
                 // LAB IN-CHARGE
-                // =====================================================
-
                 .requestMatchers("/lab/**")
                 .authenticated()
 
-
-                // =====================================================
                 // BED IN-CHARGE
-                // =====================================================
-
                 .requestMatchers("/bed/**")
                 .authenticated()
 
-
-                // =====================================================
                 // EVERYTHING ELSE
-                // =====================================================
-
                 .anyRequest()
                 .authenticated()
             )
 
-
-            // =========================================================
             // JWT FILTER
-            // =========================================================
-
             .addFilterBefore(
                     jwtFilter,
                     UsernamePasswordAuthenticationFilter.class
@@ -210,18 +138,19 @@ public class SecurityConfig {
     }
 
 
-    // =============================================================
     // CORS CONFIGURATION
-    // =============================================================
-
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration configuration =
                 new CorsConfiguration();
 
+        // Local development + deployed Vercel frontend
         configuration.setAllowedOrigins(
-                List.of("http://localhost:5173")
+                List.of(
+                        "http://localhost:5173",
+                        "https://hospital-managment-system-frontend-phi.vercel.app"
+                )
         );
 
         configuration.setAllowedMethods(
@@ -253,10 +182,7 @@ public class SecurityConfig {
     }
 
 
-    // =============================================================
     // PASSWORD ENCODER
-    // =============================================================
-
     @Bean
     public PasswordEncoder passwordEncoder() {
 
@@ -264,10 +190,7 @@ public class SecurityConfig {
     }
 
 
-    // =============================================================
     // AUTHENTICATION MANAGER
-    // =============================================================
-
     @Bean
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration configuration)
