@@ -1,3 +1,4 @@
+
 package com.hospital.security;
 
 import java.util.List;
@@ -7,8 +8,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -32,155 +33,148 @@ public class SecurityConfig {
             HttpSecurity http) throws Exception {
 
         http
-
-            // CORS
+            // CORS CONFIGURATION
             .cors(cors ->
-                    cors.configurationSource(
-                            corsConfigurationSource()
-                    )
+                cors.configurationSource(corsConfigurationSource())
             )
 
-            // Disable CSRF because we are using JWT
+            // Disable CSRF for JWT authentication
             .csrf(csrf -> csrf.disable())
 
             // Stateless JWT authentication
             .sessionManagement(session ->
-                    session.sessionCreationPolicy(
-                            SessionCreationPolicy.STATELESS
-                    )
+                session.sessionCreationPolicy(
+                    SessionCreationPolicy.STATELESS
+                )
             )
 
+            // AUTHORIZATION RULES
             .authorizeHttpRequests(auth -> auth
 
                 // AUTHENTICATION APIs
-                .requestMatchers("/auth/**")
-                .permitAll()
+                .requestMatchers("/auth/**").permitAll()
 
                 // SWAGGER
                 .requestMatchers(
-                        "/swagger-ui/**",
-                        "/swagger-ui.html",
-                        "/v3/api-docs/**"
-                )
-                .permitAll()
+                    "/swagger-ui/**",
+                    "/swagger-ui.html",
+                    "/v3/api-docs/**"
+                ).permitAll()
 
                 // CORS PREFLIGHT
-                .requestMatchers(HttpMethod.OPTIONS, "/**")
-                .permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                 // ADMIN
                 .requestMatchers("/admin/**")
-                .hasRole("ADMIN")
+                    .hasRole("ADMIN")
 
                 // DOCTOR SPECIALIZATION APIs
                 .requestMatchers(
-                        HttpMethod.GET,
-                        "/doctor/specializations"
-                )
-                .hasAnyRole(
-                        "PATIENT",
-                        "DOCTOR",
-                        "ADMIN",
-                        "RECEPTIONIST"
+                    HttpMethod.GET,
+                    "/doctor/specializations"
+                ).hasAnyRole(
+                    "PATIENT",
+                    "DOCTOR",
+                    "ADMIN",
+                    "RECEPTIONIST"
                 )
 
                 .requestMatchers(
-                        HttpMethod.GET,
-                        "/doctor/specialization/**"
-                )
-                .hasAnyRole(
-                        "PATIENT",
-                        "DOCTOR",
-                        "ADMIN",
-                        "RECEPTIONIST"
+                    HttpMethod.GET,
+                    "/doctor/specialization/**"
+                ).hasAnyRole(
+                    "PATIENT",
+                    "DOCTOR",
+                    "ADMIN",
+                    "RECEPTIONIST"
                 )
 
                 // DOCTOR
                 .requestMatchers("/doctor/**")
-                .hasRole("DOCTOR")
+                    .hasRole("DOCTOR")
 
                 // NURSE
                 .requestMatchers("/nurse/**")
-                .hasRole("NURSE")
+                    .hasRole("NURSE")
 
                 // PATIENT
                 .requestMatchers("/patient/**")
-                .hasRole("PATIENT")
+                    .hasRole("PATIENT")
 
                 // RECEPTIONIST
                 .requestMatchers("/receptionist/**")
-                .authenticated()
+                    .authenticated()
 
                 // PHARMACIST
                 .requestMatchers("/pharmacist/**")
-                .authenticated()
+                    .authenticated()
 
                 // LAB IN-CHARGE
                 .requestMatchers("/lab/**")
-                .authenticated()
+                    .authenticated()
 
                 // BED IN-CHARGE
                 .requestMatchers("/bed/**")
-                .authenticated()
+                    .authenticated()
 
                 // EVERYTHING ELSE
-                .anyRequest()
-                .authenticated()
+                .anyRequest().authenticated()
             )
 
             // JWT FILTER
             .addFilterBefore(
-                    jwtFilter,
-                    UsernamePasswordAuthenticationFilter.class
+                jwtFilter,
+                UsernamePasswordAuthenticationFilter.class
             );
 
         return http.build();
     }
-
 
     // CORS CONFIGURATION
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration configuration =
-                new CorsConfiguration();
+            new CorsConfiguration();
 
-        // Local development + deployed Vercel frontend
+        // FRONTEND ORIGINS
         configuration.setAllowedOrigins(
-                List.of(
-                        "http://localhost:5173",
-                        "https://hospital-managment-system-frontend-phi.vercel.app"
-                )
+            List.of(
+                "http://localhost:5173",
+                "https://hosipital-managment.vercel.app"
+            )
         );
 
+        // ALLOWED HTTP METHODS
         configuration.setAllowedMethods(
-                List.of(
-                        "GET",
-                        "POST",
-                        "PUT",
-                        "DELETE",
-                        "PATCH",
-                        "OPTIONS"
-                )
+            List.of(
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "PATCH",
+                "OPTIONS"
+            )
         );
 
+        // ALLOWED HEADERS
         configuration.setAllowedHeaders(
-                List.of("*")
+            List.of("*")
         );
 
+        // Allow credentials
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
+            new UrlBasedCorsConfigurationSource();
 
         source.registerCorsConfiguration(
-                "/**",
-                configuration
+            "/**",
+            configuration
         );
 
         return source;
     }
-
 
     // PASSWORD ENCODER
     @Bean
@@ -188,7 +182,6 @@ public class SecurityConfig {
 
         return new BCryptPasswordEncoder();
     }
-
 
     // AUTHENTICATION MANAGER
     @Bean
