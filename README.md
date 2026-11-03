@@ -1,53 +1,62 @@
-# Hospital Management System Backend
+# Hospital Management System
 
-Spring Boot monolithic backend for the Hospital Management System.
+## Overview
+The Hospital Management System is a web-based application designed to simplify hospital operations and improve patient management.
 
-## Structure
+## Technologies Used
 
-- entity
-- repository
-- service
-- service/serviceimpl
-- controller
-- security
-- config
+### Backend
+- Java
+- Spring Boot
+- Spring Data JPA
+- Hibernate
+- MySQL / TiDB Cloud
+- Spring Security
+- JWT Authentication
 
-## Roles
+### Frontend
+- React.js
+- JavaScript
+- HTML
+- CSS
 
-ADMIN, DOCTOR, NURSE, RECEPTIONIST, PATIENT, PHARMACIST, LAB_INCHARGE, BED_INCHARGE
+## Key Features
+- User registration and login
+- Role-based access
+- Patient management
+- Doctor management
+- Appointment scheduling
+- Consultation management
+- Prescription management
+- Laboratory test management
+- Patient vitals management
+- JWT-based authentication
+- Email notifications
+- REST API integration
 
 ## Database
+The application uses a MySQL-compatible TiDB Cloud database.
 
-MySQL database:
-hospital_management_db
+## Backend Setup
 
-Default application configuration:
-- Host: localhost
-- Port: 3306
-- Username: root
-- Password: empty
+1. Clone the repository.
+2. Configure database credentials using environment variables.
+3. Configure email credentials.
+4. Run the application:
 
-If your MySQL password is different, update:
-src/main/resources/application.properties
+```bash
+mvn spring-boot:run
+```
 
-## Run
+Backend runs on:
 
-1. Open as a Maven project in Eclipse/STS/IntelliJ.
-2. Make sure MySQL is running.
-3. Update database username/password if required.
-4. Run HospitalManagementSystemApplication.java.
+`http://localhost:8080`
 
-Swagger:
-http://localhost:8080/swagger-ui.html
+## API Documentation
 
-Register:
-POST /auth/register
+Swagger UI:
 
-Login:
-POST /auth/login
+`http://localhost:8080/swagger-ui.html`
 
-After login, use the returned JWT in Swagger Authorize:
-Bearer <token>
-
-Note:
-This ZIP provides the complete project structure and the core authentication/user workflow. Additional role-specific business methods can be expanded as the frontend/API requirements are implemented.
+## Project Purpose
+To provide a centralized platform for managing hospital activities, patient information, appointments, consultations, prescriptions, and laboratory records.
